@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "tauri dev",
     "icon": "tauri icon app-icon.svg",
-    "build": "npm run build -w @graph/web && tauri build",
+    "build": "tauri build",
     "test": "vitest run"
   },
   "devDependencies": {

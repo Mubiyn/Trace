@@ -7,7 +7,7 @@
     "frontendDist": "../../web/dist",
     "devUrl": "http://localhost:5173",
     "beforeDevCommand": "npm run dev -w @graph/web",
-    "beforeBuildCommand": "npm run build -w @graph/web"
+    "beforeBuildCommand": "npm run build -w @graph/ui && npm run build -w @graph/web"
   },
   "app": {
     "windows": [
