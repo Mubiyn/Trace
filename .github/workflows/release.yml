@@ -98,6 +98,9 @@ jobs:
             librsvg2-dev \
             patchelf
       - run: npm ci
+      - name: Pin time crate (time 0.3.48 breaks tauri-utils)
+        working-directory: apps/desktop/src-tauri
+        run: cargo update -p time --precise 0.3.47
       - name: Build desktop bundles
         run: npm run build -w @graph/desktop
       - name: Upload desktop bundles
