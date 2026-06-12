@@ -106,12 +106,34 @@ jobs:
         run: npm run icon
       - name: Build desktop bundles
         run: npm run build -w @graph/desktop
-      - name: Upload desktop bundles
+      - name: Stage desktop installers
+        shell: bash
+        run: |
+          mkdir -p desktop-dist
+          BUNDLE=apps/desktop/src-tauri/target/release/bundle
+          shopt -s nullglob
+          if [[ "${{ runner.os }}" == "Linux" ]]; then
+            cp "$BUNDLE/deb"/*.deb desktop-dist/
+            cp "$BUNDLE/rpm"/*.rpm desktop-dist/
+            cp "$BUNDLE/appimage"/*.AppImage desktop-dist/
+          elif [[ "${{ runner.os }}" == "macOS" ]]; then
+            cp "$BUNDLE/dmg"/*.dmg desktop-dist/
+          elif [[ "${{ runner.os }}" == "Windows" ]]; then
+            cp "$BUNDLE/msi"/*.msi desktop-dist/
+            cp "$BUNDLE/nsis"/*-setup.exe desktop-dist/
+          fi
+          echo "Installers:"
+          ls -la desktop-dist/
+          if [[ -z "$(ls -A desktop-dist)" ]]; then
+            echo "No installers found under $BUNDLE"
+            find "$BUNDLE" -type f | head -50
+            exit 1
+          fi
+      - name: Upload desktop installers
         uses: actions/upload-artifact@v7
         with:
           name: desktop-${{ matrix.platform }}
-          path: |
-            apps/desktop/src-tauri/target/release/bundle/**/*
+          path: desktop-dist/*
 
   publish-release:
     name: Create GitHub Release
@@ -123,25 +145,33 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           path: release-assets
-          merge-multiple: true
-      - name: Flatten release assets
-        run: find release-assets -type f -print
+      - name: Stage release files
+        run: |
+          mkdir -p dist
+          find release-assets -maxdepth 2 -type f -name 'graph-server-*' -exec cp -t dist {} +
+          find release-assets -maxdepth 2 -type f -name '*.vsix' -exec cp -t dist {} +
+          find release-assets/desktop-linux -maxdepth 1 -type f \( -name '*.deb' -o -name '*.rpm' -o -name '*.AppImage' \) -exec cp -t dist {} + 2>/dev/null || true
+          find release-assets/desktop-macos -maxdepth 1 -type f -name '*.dmg' -exec cp -t dist {} + 2>/dev/null || true
+          find release-assets/desktop-windows -maxdepth 1 -type f \( -name '*.msi' -o -name '*setup.exe' \) -exec cp -t dist {} + 2>/dev/null || true
+          echo "Release files ($(find dist -type f | wc -l)):"
+          ls -la dist/
+          test "$(ls -A dist)"
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: Trace ${{ github.ref_name }}
           draft: true
           generate_release_notes: true
+          overwrite_files: true
           body: |
             ## Install
 
             1. Download **`graph-server-*`** for your OS, run it (listens on `127.0.0.1:9847`).
-            2. **Desktop**: install the bundle for your platform from `desktop-*` artifacts.
+            2. **Desktop**: `.deb` / `.rpm` / `.AppImage` (Linux), `.dmg` (macOS), `.msi` or `*-setup.exe` (Windows).
             3. **VS Code / Cursor**: install `*.vsix` via *Extensions → … → Install from VSIX*.
             4. **Web**: use the [GitHub Pages demo](https://mubiyn.github.io/Trace/) or run `npm run dev:web` locally.
 
             The UI is a static client — **graph-server must be running** on your machine.
-          files: |
-            release-assets/**
+          files: dist/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
