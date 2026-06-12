@@ -100,7 +100,7 @@ fn resolve_span_node(store: &GraphStore, span: &Value) -> Option<String> {
         .or_else(|| attrs.get("code.file.path"))
         .cloned();
 
-    if let (Some(ref file_path), Some(ref function)) = (file.as_ref(), function.as_ref()) {
+    if let (Some(file_path), Some(function)) = (file.as_ref(), function.as_ref()) {
         let normalized = normalize_repo_path(file_path);
         if let Some(id) = store.find_function_symbol_id(&normalized, function) {
             return Some(id);

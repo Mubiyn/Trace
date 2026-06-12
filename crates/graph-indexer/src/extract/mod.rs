@@ -5,13 +5,16 @@ use crate::model::{ExtractedSymbol, NodeKind};
 use streaming_iterator::StreamingIterator;
 use tree_sitter::{Language, Parser, Query, QueryCursor};
 
+type ExtraSymbolExtractor =
+    fn(&str, &str, &str, tree_sitter::Tree) -> Vec<ExtractedSymbol>;
+
 struct LangQuery {
     language_id: &'static str,
     language: Language,
     /// tree-sitter query; captures named `name` on function/class nodes.
     symbols_query: &'static str,
     /// Optional extra query (e.g. Python imports).
-    extra: Option<fn(&str, &str, &str, tree_sitter::Tree) -> Vec<ExtractedSymbol>>,
+    extra: Option<ExtraSymbolExtractor>,
 }
 
 fn lang_specs() -> Vec<LangQuery> {
@@ -158,7 +161,7 @@ fn extract_with_spec(
     parser.set_language(&spec.language).ok()?;
     let tree = parser.parse(source, None)?;
 
-    let mut symbols = extract_named_items(&spec, source, relative_path, &tree)?;
+    let mut symbols = extract_named_items(spec, source, relative_path, &tree)?;
 
     if let Some(extra) = spec.extra {
         symbols.extend(extra(source, relative_path, spec.language_id, tree));

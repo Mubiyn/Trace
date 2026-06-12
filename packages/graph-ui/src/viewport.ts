@@ -1,4 +1,6 @@
-import type { Core, CollectionReturnValue } from "cytoscape";
+import type { Core } from "cytoscape";
+
+type CyNodeCollection = ReturnType<Core["nodes"]>;
 import type { EdgeKind, Subgraph } from "./types";
 import { pickLayoutRoots } from "./modes";
 
@@ -108,7 +110,7 @@ export function trimSubgraphForDisplay(
 export function focusElementsForLargeGraph(
   cy: Core,
   subgraph: Subgraph,
-): CollectionReturnValue {
+): CyNodeCollection {
   const roots = pickLayoutRoots(subgraph);
   const rootNodes = cy.nodes().filter((node) => roots.includes(node.id()));
 

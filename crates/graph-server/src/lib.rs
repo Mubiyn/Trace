@@ -63,7 +63,7 @@ struct IndexJob {
 }
 
 enum JobUpdate {
-    Complete { active: ActiveIndex },
+    Complete { active: Box<ActiveIndex> },
     Failed { message: String },
 }
 
@@ -206,6 +206,12 @@ impl IntoResponse for ApiError {
             }),
         )
             .into_response()
+    }
+}
+
+impl Default for AppState {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -520,7 +526,9 @@ async fn start_index(
         }
 
         let update = match state_clone.index_request_blocking(&request) {
-            Ok(active) => JobUpdate::Complete { active },
+            Ok(active) => JobUpdate::Complete {
+                active: Box::new(active),
+            },
             Err(message) => JobUpdate::Failed { message },
         };
 
@@ -531,7 +539,7 @@ async fn start_index(
                     job.status = JobStatus::Complete;
                     job.file_count = Some(active.file_count);
                 }
-                guard.active = Some(active);
+                guard.active = Some(*active);
                 guard.overlay = None;
             }
             JobUpdate::Failed { message } => {

@@ -10,6 +10,18 @@ pub struct GraphStore {
     conn: Connection,
 }
 
+struct NodeInsert<'a> {
+    id: &'a str,
+    kind: NodeKind,
+    name: &'a str,
+    relative_path: &'a str,
+    parent_file: Option<&'a str>,
+    line: Option<u32>,
+    extension: Option<&'a str>,
+    language_id: &'a str,
+    size_bytes: Option<u64>,
+}
+
 impl GraphStore {
     pub fn open_in_memory() -> Result<Self, IndexError> {
         let conn = Connection::open_in_memory()?;
@@ -178,17 +190,17 @@ impl GraphStore {
             }
 
             let id = node_id_for_path(&relative_str);
-            self.insert_node(
-                &id,
+            self.insert_node(NodeInsert {
+                id: &id,
                 kind,
-                &name,
-                &relative_str,
-                None,
-                None,
-                extension.as_deref(),
-                &language_id,
-                entry.size_bytes,
-            )?;
+                name: &name,
+                relative_path: &relative_str,
+                parent_file: None,
+                line: None,
+                extension: extension.as_deref(),
+                language_id: &language_id,
+                size_bytes: entry.size_bytes,
+            })?;
         }
 
         for entry in entries {
@@ -216,17 +228,17 @@ impl GraphStore {
     pub fn insert_symbols(&self, symbols: &[ExtractedSymbol]) -> Result<(), IndexError> {
         for sym in symbols {
             let id = symbol_id(&sym.parent_file, sym.kind, &sym.name, sym.line);
-            self.insert_node(
-                &id,
-                sym.kind,
-                &sym.name,
-                &sym.parent_file,
-                Some(sym.parent_file.as_str()),
-                Some(sym.line),
-                None,
-                &sym.language_id,
-                None,
-            )?;
+            self.insert_node(NodeInsert {
+                id: &id,
+                kind: sym.kind,
+                name: &sym.name,
+                relative_path: &sym.parent_file,
+                parent_file: Some(sym.parent_file.as_str()),
+                line: Some(sym.line),
+                extension: None,
+                language_id: &sym.language_id,
+                size_bytes: None,
+            })?;
 
             let file_id = node_id_for_path(&sym.parent_file);
             self.insert_edge(&file_id, &id, EdgeKind::Contains, None)?;
@@ -249,31 +261,20 @@ impl GraphStore {
         Ok(())
     }
 
-    fn insert_node(
-        &self,
-        id: &str,
-        kind: NodeKind,
-        name: &str,
-        relative_path: &str,
-        parent_file: Option<&str>,
-        line: Option<u32>,
-        extension: Option<&str>,
-        language_id: &str,
-        size_bytes: Option<u64>,
-    ) -> Result<(), IndexError> {
+    fn insert_node(&self, node: NodeInsert<'_>) -> Result<(), IndexError> {
         self.conn.execute(
             "INSERT OR REPLACE INTO nodes (id, kind, name, relative_path, parent_file, line, extension, language_id, size_bytes)
              VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
             params![
-                id,
-                kind.as_str(),
-                name,
-                relative_path,
-                parent_file,
-                line,
-                extension,
-                language_id,
-                size_bytes.map(|s| s as i64),
+                node.id,
+                node.kind.as_str(),
+                node.name,
+                node.relative_path,
+                node.parent_file,
+                node.line,
+                node.extension,
+                node.language_id,
+                node.size_bytes.map(|s| s as i64),
             ],
         )?;
         Ok(())
@@ -407,7 +408,7 @@ impl GraphStore {
              FROM nodes ORDER BY kind, relative_path, line, name",
         )?;
 
-        let rows = stmt.query_map([], |row| row_to_node(row))?;
+        let rows = stmt.query_map([], row_to_node)?;
         rows.collect::<Result<Vec<_>, _>>()
             .map_err(IndexError::from)
     }
@@ -427,7 +428,7 @@ impl GraphStore {
         )?;
         let mut rows = stmt.query(params![id])?;
         if let Some(row) = rows.next()? {
-            return Ok(Some(row_to_node(&row)?));
+            return Ok(Some(row_to_node(row)?));
         }
         Ok(None)
     }

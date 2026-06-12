@@ -46,7 +46,7 @@ export function GraphCanvas({
           padding: "8px",
           width: 28,
           height: 28,
-        },
+        } as StylesheetStyle["style"],
       },
       {
         selector: "edge",

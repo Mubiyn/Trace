@@ -30,18 +30,10 @@ pub struct IndexResult {
     pub database_path: Option<PathBuf>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct IndexOptions {
     /// When set, persist the index to this SQLite file. Otherwise in-memory only.
     pub database_path: Option<PathBuf>,
-}
-
-impl Default for IndexOptions {
-    fn default() -> Self {
-        Self {
-            database_path: None,
-        }
-    }
 }
 
 impl IndexOptions {
