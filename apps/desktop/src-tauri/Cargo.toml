@@ -14,3 +14,6 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 tauri = { version = "2", features = [] }
 tauri-plugin-shell = "2"
+# time 0.3.48 breaks blanket `From` impls in tauri-utils (and cookie).
+# https://github.com/time-rs/time/issues/783 — remove pin once fixed upstream.
+time = "=0.3.47"
