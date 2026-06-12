@@ -1,0 +1,154 @@
+{
+  "schemaVersion": 1,
+  "nodes": [
+    {
+      "id": "dir:.",
+      "kind": "directory",
+      "name": ".",
+      "path": ".",
+      "language": "directory"
+    },
+    {
+      "id": "path:expected",
+      "kind": "directory",
+      "name": "expected",
+      "path": "expected",
+      "language": "directory"
+    },
+    {
+      "id": "path:README.md",
+      "kind": "file",
+      "name": "README.md",
+      "path": "README.md",
+      "language": "markdown"
+    },
+    {
+      "id": "path:expected/graph.json",
+      "kind": "file",
+      "name": "graph.json",
+      "path": "expected/graph.json",
+      "language": "json"
+    },
+    {
+      "id": "path:main.py",
+      "kind": "file",
+      "name": "main.py",
+      "path": "main.py",
+      "language": "python"
+    },
+    {
+      "id": "path:utils.py",
+      "kind": "file",
+      "name": "utils.py",
+      "path": "utils.py",
+      "language": "python"
+    },
+    {
+      "id": "sym:main.py:function:greet:4",
+      "kind": "function",
+      "name": "greet",
+      "path": "main.py",
+      "parent_file": "main.py",
+      "line": 4,
+      "language": "python"
+    },
+    {
+      "id": "sym:utils.py:function:format_message:1",
+      "kind": "function",
+      "name": "format_message",
+      "path": "utils.py",
+      "parent_file": "utils.py",
+      "line": 1,
+      "language": "python"
+    },
+    {
+      "id": "sym:main.py:import:from utils import format_message:1",
+      "kind": "import",
+      "name": "from utils import format_message",
+      "path": "main.py",
+      "parent_file": "main.py",
+      "line": 1,
+      "language": "python"
+    },
+    {
+      "id": "sym:main.py:branch:if __name__ == \"__main__\":8",
+      "kind": "branch",
+      "name": "if __name__ == \"__main__\"",
+      "path": "main.py",
+      "parent_file": "main.py",
+      "line": 8,
+      "language": "python"
+    }
+  ],
+  "edges": [
+    {
+      "from": "sym:main.py:branch:if __name__ == \"__main__\":8",
+      "to": "sym:main.py:function:greet:4",
+      "kind": "BRANCHES_TO",
+      "confidence": 0.87
+    },
+    {
+      "from": "sym:main.py:function:greet:4",
+      "to": "sym:utils.py:function:format_message:1",
+      "kind": "CALLS",
+      "confidence": 0.9
+    },
+    {
+      "from": "dir:.",
+      "to": "path:README.md",
+      "kind": "CONTAINS"
+    },
+    {
+      "from": "dir:.",
+      "to": "path:expected",
+      "kind": "CONTAINS"
+    },
+    {
+      "from": "dir:.",
+      "to": "path:main.py",
+      "kind": "CONTAINS"
+    },
+    {
+      "from": "dir:.",
+      "to": "path:utils.py",
+      "kind": "CONTAINS"
+    },
+    {
+      "from": "path:expected",
+      "to": "path:expected/graph.json",
+      "kind": "CONTAINS"
+    },
+    {
+      "from": "path:main.py",
+      "to": "sym:main.py:branch:if __name__ == \"__main__\":8",
+      "kind": "CONTAINS"
+    },
+    {
+      "from": "path:main.py",
+      "to": "sym:main.py:function:greet:4",
+      "kind": "CONTAINS"
+    },
+    {
+      "from": "path:main.py",
+      "to": "sym:main.py:import:from utils import format_message:1",
+      "kind": "CONTAINS"
+    },
+    {
+      "from": "path:utils.py",
+      "to": "sym:utils.py:function:format_message:1",
+      "kind": "CONTAINS"
+    },
+    {
+      "from": "path:main.py",
+      "to": "path:utils.py",
+      "kind": "IMPORTS",
+      "confidence": 0.85
+    },
+    {
+      "from": "sym:main.py:import:from utils import format_message:1",
+      "to": "sym:utils.py:function:format_message:1",
+      "kind": "IMPORTS",
+      "confidence": 0.92
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "@graph/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "npm run build -w @graph/web && tauri build",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.6.2",
+    "vitest": "^3.2.4"
+  }
+}

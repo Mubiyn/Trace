@@ -1,0 +1,45 @@
+# Rust
+target/
+**/*.rs.bk
+
+# Node / front-end
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+
+# Desktop (Tauri)
+apps/desktop/src-tauri/target/
+
+# OS & editors
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+*.swp
+*.swo
+
+# Local env & secrets
+.env
+.env.*
+!.env.example
+
+# Local graph indexes (hosted mode / dev)
+*.sqlite
+*.sqlite3
+*.db
+.graph/
+
+# Test & coverage artifacts
+coverage/
+playwright-report/
+test-results/
+
+# Internal planning & roadmap (keep local; not for the public repo)
+GETTING_STARTED.md
+HOSTED_INDEX.md
+PRD.md
+RESEARCH.md
+TEST_STRATEGY.md
+VISION.md
+flutter_app_graph.md

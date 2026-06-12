@@ -1,0 +1,474 @@
+openapi: 3.1.0
+info:
+  title: Graph API
+  version: 0.1.0
+  description: Local code graph server for Trace. See README.md for usage.
+
+servers:
+  - url: http://127.0.0.1:9847
+    description: Local graph-server
+
+paths:
+  /health:
+    get:
+      summary: Liveness check
+      operationId: health
+      responses:
+        "200":
+          description: Server is up
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /index:
+    post:
+      summary: Start indexing a repository path
+      operationId: indexRepo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IndexRequest"
+      responses:
+        "202":
+          description: Index job accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IndexJobResponse"
+        "400":
+          description: Invalid path
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /index/{job_id}:
+    get:
+      summary: Poll index job status
+      operationId: indexStatus
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Job status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IndexStatusResponse"
+        "404":
+          description: Unknown job
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /capabilities:
+    get:
+      summary: Language tiers for the active indexed repo
+      operationId: capabilities
+      parameters:
+        - name: repo
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Per-language capability tiers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CapabilitiesResponse"
+        "404":
+          description: Repo not indexed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: No active index
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /repos:
+    get:
+      summary: List indexed repos in hosted registry
+      operationId: listRepos
+      responses:
+        "200":
+          description: Repo summaries
+        "400":
+          description: Hosted mode not enabled
+
+  /activate:
+    post:
+      summary: Switch active indexed repository
+      operationId: activateRepo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [repoId]
+              properties:
+                repoId:
+                  type: string
+      responses:
+        "200":
+          description: Activated
+
+  /overlay:
+    post:
+      summary: Import runtime observations (hits + observed paths)
+      operationId: importOverlay
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RuntimeOverlay"
+      responses:
+        "200":
+          description: Overlay stored for active index
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OverlayStatusResponse"
+        "409":
+          description: No repository indexed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    get:
+      summary: Get current runtime overlay
+      operationId: getOverlay
+      responses:
+        "200":
+          description: Overlay or null
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/RuntimeOverlay"
+                  - type: "null"
+    delete:
+      summary: Clear runtime overlay
+      operationId: clearOverlay
+      responses:
+        "204":
+          description: Overlay cleared
+
+  /query:
+    post:
+      summary: Run a graph query
+      operationId: query
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryRequest"
+      responses:
+        "200":
+          description: Query result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryResponse"
+        "400":
+          description: Invalid query
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Node not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: No repository indexed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required: [status, version]
+      properties:
+        status:
+          type: string
+          example: ok
+        version:
+          type: string
+
+    IndexRequest:
+      type: object
+      required: [path]
+      properties:
+        path:
+          type: string
+          description: Absolute or relative path to repository root
+        repoId:
+          type: string
+        gitUrl:
+          type: string
+        gitRef:
+          type: string
+        persist:
+          type: boolean
+          description: Persist to hosted registry when GRAPH_HOSTED_DIR is configured
+
+    IndexJobResponse:
+      type: object
+      required: [job_id, status]
+      properties:
+        job_id:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/JobStatus"
+
+    IndexStatusResponse:
+      type: object
+      required: [job_id, status]
+      properties:
+        job_id:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/JobStatus"
+        path:
+          type: string
+        error:
+          type: string
+        file_count:
+          type: integer
+
+    JobStatus:
+      type: string
+      enum: [queued, running, complete, failed]
+
+    CapabilitiesResponse:
+      type: object
+      required: [repo, file_count, capabilities]
+      properties:
+        repo:
+          type: string
+        file_count:
+          type: integer
+        capabilities:
+          $ref: "#/components/schemas/Capabilities"
+
+    Capabilities:
+      type: object
+      required: [languages]
+      properties:
+        languages:
+          type: array
+          items:
+            $ref: "#/components/schemas/LanguageCapability"
+
+    LanguageCapability:
+      type: object
+      required: [id, files, tier]
+      properties:
+        id:
+          type: string
+        files:
+          type: integer
+        tier:
+          type: string
+          enum: [L0, L1, L2, L3, L4]
+
+    QueryRequest:
+      type: object
+      required: [op]
+      properties:
+        op:
+          type: string
+          enum: [search, callers, callees, trace, subgraph, impact, entryPoints]
+        id:
+          type: string
+        query:
+          type: string
+        limit:
+          type: integer
+        depth:
+          type: integer
+        scope:
+          type: string
+        boundary:
+          type: boolean
+
+    QueryResponse:
+      oneOf:
+        - $ref: "#/components/schemas/NodesResult"
+        - $ref: "#/components/schemas/NeighborsResult"
+        - $ref: "#/components/schemas/TraceResult"
+        - $ref: "#/components/schemas/SubgraphResult"
+
+    NodesResult:
+      type: object
+      required: [nodes]
+      properties:
+        nodes:
+          type: array
+          items:
+            $ref: "#/components/schemas/GraphNode"
+
+    NeighborsResult:
+      type: object
+      required: [neighbors]
+      properties:
+        neighbors:
+          type: array
+          items:
+            $ref: "#/components/schemas/Neighbor"
+
+    TraceResult:
+      type: object
+      required: [hops]
+      properties:
+        hops:
+          type: array
+          items:
+            $ref: "#/components/schemas/TraceHop"
+
+    SubgraphResult:
+      type: object
+      required: [nodes, edges, ghosts]
+      properties:
+        nodes:
+          type: array
+          items:
+            $ref: "#/components/schemas/GraphNode"
+        edges:
+          type: array
+          items:
+            $ref: "#/components/schemas/GraphEdge"
+        ghosts:
+          type: array
+          items:
+            $ref: "#/components/schemas/GhostNode"
+        overlay:
+          $ref: "#/components/schemas/SubgraphOverlay"
+
+    RuntimeOverlay:
+      type: object
+      properties:
+        schemaVersion:
+          type: integer
+        nodeHits:
+          type: object
+          additionalProperties:
+            type: integer
+        paths:
+          type: array
+          items:
+            $ref: "#/components/schemas/ObservedPath"
+
+    ObservedPath:
+      type: object
+      required: [nodeIds]
+      properties:
+        label:
+          type: string
+        nodeIds:
+          type: array
+          items:
+            type: string
+        hits:
+          type: integer
+
+    SubgraphOverlay:
+      type: object
+      properties:
+        nodeHits:
+          type: object
+          additionalProperties:
+            type: integer
+        paths:
+          type: array
+          items:
+            $ref: "#/components/schemas/ObservedPath"
+        observedNodeIds:
+          type: array
+          items:
+            type: string
+        observedEdgeKeys:
+          type: array
+          items:
+            type: string
+
+    OverlayStatusResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+        pathCount:
+          type: integer
+        nodeHitCount:
+          type: integer
+        observationCount:
+          type: integer
+
+    GraphNode:
+      type: object
+      additionalProperties: true
+
+    GraphEdge:
+      type: object
+      additionalProperties: true
+
+    Neighbor:
+      type: object
+      required: [node, edge]
+      properties:
+        node:
+          $ref: "#/components/schemas/GraphNode"
+        edge:
+          $ref: "#/components/schemas/GraphEdge"
+
+    TraceHop:
+      type: object
+      required: [node, siblings]
+      properties:
+        node:
+          $ref: "#/components/schemas/GraphNode"
+        via:
+          $ref: "#/components/schemas/GraphEdge"
+        siblings:
+          type: array
+          items:
+            $ref: "#/components/schemas/GraphNode"
+
+    GhostNode:
+      type: object
+      additionalProperties: true
+
+    ApiError:
+      type: object
+      required: [error, code]
+      properties:
+        error:
+          type: string
+        code:
+          type: string

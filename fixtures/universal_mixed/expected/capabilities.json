@@ -1,0 +1,8 @@
+{
+  "languages": [
+    { "id": "go", "files": 1, "tier": "L0" },
+    { "id": "markdown", "files": 1, "tier": "L0" },
+    { "id": "python", "files": 1, "tier": "L0" },
+    { "id": "typescript", "files": 1, "tier": "L0" }
+  ]
+}

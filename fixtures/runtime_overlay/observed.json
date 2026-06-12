@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "nodeHits": {
+    "sym:main.py:function:greet:4": 120,
+    "sym:utils.py:function:format_message:1": 118
+  },
+  "paths": [
+    {
+      "label": "greet-hot-path",
+      "nodeIds": [
+        "sym:main.py:function:greet:4",
+        "sym:utils.py:function:format_message:1"
+      ],
+      "hits": 118
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "resourceSpans": [
+    {
+      "scopeSpans": [
+        {
+          "spans": [
+            {
+              "traceId": "abc123",
+              "spanId": "span1",
+              "name": "greet",
+              "attributes": [
+                { "key": "code.function", "value": { "stringValue": "greet" } },
+                { "key": "code.filepath", "value": { "stringValue": "main.py" } }
+              ]
+            },
+            {
+              "traceId": "abc123",
+              "spanId": "span2",
+              "parentSpanId": "span1",
+              "name": "format_message",
+              "attributes": [
+                { "key": "code.function", "value": { "stringValue": "format_message" } },
+                { "key": "code.filepath", "value": { "stringValue": "utils.py" } }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

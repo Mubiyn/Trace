@@ -1,0 +1,12 @@
+[package]
+name = "graph-engine"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+graph-indexer = { path = "../graph-indexer" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[dev-dependencies]
+tempfile = "3"

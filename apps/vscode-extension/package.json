@@ -1,0 +1,43 @@
+{
+  "name": "@graph/vscode-extension",
+  "displayName": "Graph",
+  "description": "Roots-and-branches code graph for any repository",
+  "version": "0.1.0",
+  "publisher": "graph",
+  "private": true,
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "graph.openPanel",
+        "title": "Graph: Open Panel"
+      }
+    ]
+  },
+  "scripts": {
+    "build:webview": "vite build -c vite.webview.config.ts",
+    "build": "tsc -p tsconfig.json && npm run build:webview",
+    "test": "vitest run",
+    "watch": "tsc -watch -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@graph/ui": "*",
+    "@types/node": "^22.15.0",
+    "@types/vscode": "^1.90.0",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.6.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5",
+    "vitest": "^3.2.4"
+  }
+}

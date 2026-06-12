@@ -1,0 +1,25 @@
+[package]
+name = "graph-indexer"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+ignore = "0.4"
+rusqlite = { version = "0.32", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tree-sitter = "0.25"
+tree-sitter-go = "0.23"
+tree-sitter-java = "0.23"
+tree-sitter-javascript = "0.23"
+tree-sitter-php = "0.24"
+tree-sitter-python = "0.23"
+tree-sitter-ruby = "0.23"
+tree-sitter-rust = "0.23"
+tree-sitter-swift = "0.7"
+tree-sitter-typescript = "0.23"
+streaming-iterator = "0.1"
+regex = "1"
+
+[dev-dependencies]
+tempfile = "3"

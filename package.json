@@ -1,0 +1,14 @@
+{
+  "name": "graph-monorepo",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @graph/ui && npm run build -w @graph/web",
+    "test": "npm run test -w @graph/ui && npm run test -w @graph/vscode-extension && npm run test -w @graph/desktop",
+    "dev:web": "npm run dev -w @graph/web",
+    "dev:ui": "npm run dev -w @graph/ui"
+  }
+}
