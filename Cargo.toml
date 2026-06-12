@@ -5,6 +5,7 @@ members = [
     "crates/graph-engine",
     "crates/graph-server",
 ]
+exclude = ["apps/desktop/src-tauri"]
 
 [workspace.package]
 version = "0.1.0"

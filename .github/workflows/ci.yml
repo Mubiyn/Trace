@@ -35,4 +35,4 @@ jobs:
       - name: ui build smoke
         run: npm run build
       - name: vscode extension build smoke
-        run: npm run build -w @graph/vscode-extension
+        run: npm run build -w trace

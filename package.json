@@ -7,8 +7,13 @@
   ],
   "scripts": {
     "build": "npm run build -w @graph/ui && npm run build -w @graph/web",
-    "test": "npm run test -w @graph/ui && npm run test -w @graph/vscode-extension && npm run test -w @graph/desktop",
+    "build:web": "npm run build -w @graph/ui && npm run build -w @graph/web",
+    "build:desktop": "npm run build -w @graph/desktop",
+    "build:extension": "npm run build -w trace",
+    "package:extension": "npm run package:vsix -w trace",
+    "test": "npm run test -w @graph/ui && npm run test -w trace && npm run test -w @graph/desktop",
     "dev:web": "npm run dev -w @graph/web",
-    "dev:ui": "npm run dev -w @graph/ui"
+    "dev:ui": "npm run dev -w @graph/ui",
+    "dev:desktop": "npm run dev -w @graph/desktop"
   }
 }

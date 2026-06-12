@@ -35,6 +35,9 @@ coverage/
 playwright-report/
 test-results/
 
+# Packaged extensions (built in CI / locally)
+apps/vscode-extension/*.vsix
+
 # Internal planning & roadmap (keep local; not for the public repo)
 GETTING_STARTED.md
 HOSTED_INDEX.md

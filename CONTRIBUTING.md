@@ -97,6 +97,20 @@ Poll `GET /index/{job_id}` until `status` is `complete`, then query via the UI o
 
 If you change HTTP routes or request shapes, update `api/openapi.yaml` and integration tests in `crates/graph-server/tests/`.
 
+### Building distributables
+
+| Target | Command | Output |
+|--------|---------|--------|
+| Web | `npm run build:web` | `apps/web/dist/` |
+| Desktop | `npm run build:desktop` | `apps/desktop/src-tauri/target/release/bundle/` |
+| VS Code | `npm run package:extension` | `apps/vscode-extension/trace-*.vsix` |
+| Server | `cargo build --release -p graph-server` | `target/release/graph-server` |
+
+CI workflows:
+
+- **`pages.yml`** — deploys web app to GitHub Pages on every `main` push
+- **`release.yml`** — builds server binaries, desktop bundles, and `.vsix` on `v*` tags
+
 ## Pull request checklist
 
 - [ ] `cargo test --workspace` passes

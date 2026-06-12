@@ -1,0 +1,10 @@
+src/**
+node_modules/**
+.vscode/**
+*.ts
+!out/**
+vite.webview.config.ts
+tsconfig.json
+vitest.config.ts
+**/*.test.ts
+**/*.map

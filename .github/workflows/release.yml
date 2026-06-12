@@ -1,0 +1,141 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-graph-server:
+    name: graph-server (${{ matrix.asset }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            asset: graph-server-x86_64-unknown-linux-gnu
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            asset: graph-server-aarch64-apple-darwin
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            asset: graph-server-x86_64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            asset: graph-server-x86_64-pc-windows-msvc.exe
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - name: Build graph-server
+        run: cargo build --release -p graph-server --target ${{ matrix.target }}
+      - name: Stage binary
+        shell: bash
+        run: |
+          mkdir -p dist
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            cp "target/${{ matrix.target }}/release/graph-server.exe" "dist/${{ matrix.asset }}"
+          else
+            cp "target/${{ matrix.target }}/release/graph-server" "dist/${{ matrix.asset }}"
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: dist/${{ matrix.asset }}
+
+  build-vsix:
+    name: VS Code extension (.vsix)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - run: npm run package:extension
+      - uses: actions/upload-artifact@v4
+        with:
+          name: graph-vscode-vsix
+          path: apps/vscode-extension/trace-*.vsix
+
+  build-desktop:
+    name: desktop (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+          - os: macos-latest
+            platform: macos
+          - os: windows-latest
+            platform: windows
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install Linux dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf
+      - run: npm ci
+      - name: Build desktop bundles
+        run: npm run build -w @graph/desktop
+      - name: Upload desktop bundles
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.platform }}
+          path: |
+            apps/desktop/src-tauri/target/release/bundle/**/*
+
+  publish-release:
+    name: Create GitHub Release
+    needs: [build-graph-server, build-vsix, build-desktop]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+      - name: Flatten release assets
+        run: find release-assets -type f -print
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Trace ${{ github.ref_name }}
+          draft: true
+          generate_release_notes: true
+          body: |
+            ## Install
+
+            1. Download **`graph-server-*`** for your OS, run it (listens on `127.0.0.1:9847`).
+            2. **Desktop**: install the bundle for your platform from `desktop-*` artifacts.
+            3. **VS Code / Cursor**: install `*.vsix` via *Extensions → … → Install from VSIX*.
+            4. **Web**: use the [GitHub Pages demo](https://mubiyn.github.io/Trace/) or run `npm run dev:web` locally.
+
+            The UI is a static client — **graph-server must be running** on your machine.
+          files: |
+            release-assets/**
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
